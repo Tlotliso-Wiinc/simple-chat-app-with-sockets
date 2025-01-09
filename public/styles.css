@@ -1,0 +1,9 @@
+h1 {
+    text-align: center;
+}
+
+#chat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
