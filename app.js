@@ -5,33 +5,59 @@ import mongoose from 'mongoose';
 import { ChatOpenAI } from "@langchain/openai";
 import Message from './models/Message.js';
 import dotenv from 'dotenv';
-
 import {
   START,
   END,
-  MessagesAnnotation,
   StateGraph,
   MemorySaver,
+  MessagesAnnotation,
 } from "@langchain/langgraph";
-
 import { v4 as uuidv4 } from "uuid";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { 
+  ChatPromptTemplate,
+  MessagesPlaceholder 
+} from "@langchain/core/prompts";
 
 const promptTemplate = ChatPromptTemplate.fromMessages([
   [
     "system",
     "You talk like a pirate. Answer all questions to the best of your ability.",
   ],
-  ["placeholder", "{messages}"],
+  new MessagesPlaceholder("messages"),
 ]);
 
-const config = { configurable: { thread_id: uuidv4() } };
+const promptTemplate2 = ChatPromptTemplate.fromMessages([
+  [
+    "system",
+    "You are a helpful assistant. Answer all questions to the best of your ability in {language}.",
+  ],
+  new MessagesPlaceholder("messages"),
+]);
+
+const config = { 
+  configurable: { 
+    thread_id: uuidv4(),
+    metadata: { language: "Spanish" }
+  } 
+};
 
 // Define the function that calls the model
 const callModel = async (state) => {
-  const prompt = await promptTemplate.invoke(state);
+  const prompt = await promptTemplate.invoke({
+    messages: state.messages
+  });
   const response = await llm.invoke(prompt);
-  return { messages: response };
+  return { messages: [response] };
+};
+
+// Define the function that calls the model
+const callModel2 = async (state) => {
+  const prompt = await promptTemplate2.invoke({
+    messages: state.messages,
+    language: state.metadata?.language || "English"
+  });
+  const response = await llm.invoke(prompt);
+  return { messages: [response] };
 };
 
 // Define a new graph
@@ -40,9 +66,15 @@ const workflow = new StateGraph(MessagesAnnotation)
   .addEdge(START, "model")
   .addEdge("model", END);
 
+  const workflow2 = new StateGraph(MessagesAnnotation)
+  .addNode("model", callModel2)
+  .addEdge(START, "model")
+  .addEdge("model", END);
+
 // Add memory
 const memory = new MemorySaver();
 const graphApp = workflow.compile({ checkpointer: memory });
+const graphApp2 = workflow2.compile({ checkpointer: new MemorySaver() });
 
 // Load environment variables from .env file
 dotenv.config();
@@ -74,7 +106,8 @@ io.on('connection', (socket) => {
         console.log(data);
         
         // Call the LLM
-        const output = await graphApp.invoke({ messages: [{ role: "user", content: data.message }] }, config);
+        // const output = await graphApp.invoke({ messages: [{ role: "user", content: data.message }] }, config);
+        const output = await graphApp2.invoke({ messages: [{ role: "user", content: data.message }]}, config);
 
         // The output contains all messages in the state.
         // This will log the last message in the conversation.
