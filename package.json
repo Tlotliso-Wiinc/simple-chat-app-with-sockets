@@ -10,8 +10,15 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@langchain/core": "^0.3.30",
+    "@langchain/langgraph": "^0.2.39",
+    "@langchain/openai": "^0.3.17",
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "mongoose": "^8.9.3",
-    "socket.io": "^4.8.1"
-  }
+    "simple-chat-app-with-sockets": "file:",
+    "socket.io": "^4.8.1",
+    "uuid": "^11.0.5"
+  },
+  "type": "module"
 }

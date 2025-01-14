@@ -1,25 +1,40 @@
-const express = require('express');
-const http = require('http');
-const socketIO = require('socket.io');
-const mongoose = require('mongoose');
+import express from 'express';
+import http from 'http';
+import { Server } from 'socket.io';
+import mongoose from 'mongoose';
+import { ChatOpenAI } from "@langchain/openai";
+import Message from './models/Message.js';
+import dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
 
 // Connect to MongoDB
 mongoose.connect('mongodb://localhost:27017/chat-app');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIO(server);
+const io = new Server(server);
 
-const Message = require('./models/Message');
+const llm = new ChatOpenAI({
+  model: "gpt-4o-mini",
+  temperature: 0
+});
 
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
     // Listen for incoming chat messages
     socket.on('chat message', async (data) => {
-        console.log('Received message:', data);
+        console.log(data);
 
-        try {
+        // Call the LLM
+        const response = await llm.invoke([{ role: "user", content: data.message }]);
+
+        // Broadcast the message to all connected clients
+        io.emit('chat message', { user: "AI", message: response.content});
+        
+        /*try {
         // Save the message to MongoDB
         const message = new Message({ user: data.user, text: data.message });
         await message.save();
@@ -29,7 +44,7 @@ io.on('connection', (socket) => {
         io.emit('chat message', data);
         } catch (err) {
         console.error('Error saving message to database:', err);
-        }
+        }*/
   });
 
   // Listen for user disconnection

@@ -20,10 +20,7 @@
 
     // Handle incoming chat messages
     socket.on('chat message', (data) => {
-      const messages = document.getElementById('messages');
-      const li = document.createElement('li');
-      li.textContent = `${data.user}: ${data.message}`;
-      messages.appendChild(li);
+      addMessage(data.user, data.message);
     });
 
     // Handle form submission
@@ -32,10 +29,18 @@
       const input = document.getElementById('messageInput');
       const message = input.value.trim();
       if (message !== '') {
+        addMessage('User', message);
         socket.emit('chat message', { user: 'User', message });
         input.value = '';
       }
     });
+
+    function addMessage(user, message) {
+      const messages = document.getElementById('messages');
+      const li = document.createElement('li');
+      li.textContent = `${user}: ${message}`;
+      messages.appendChild(li);
+    }
   </script>
 </body>
 </html>
