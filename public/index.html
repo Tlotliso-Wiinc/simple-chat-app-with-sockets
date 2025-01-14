@@ -6,6 +6,14 @@
 </head>
 <body>
   <h1>Chat</h1>
+
+  <!--
+  <div id="room-selection">
+    <input type="text" id="room-input" placeholder="Enter room name">
+    <button onclick="joinRoom()">Join Room</button>
+  </div>
+  -->
+
   <div id="chat">
     <ul id="messages"></ul>
     <form id="messageForm">
@@ -17,30 +25,63 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
+    // Generate a random room ID or you could let users input it
+    const room = 'room-' + Math.random().toString(36).substr(2, 9);
 
+    socket.on("connect", () => {
+        console.log("Connected with WebSocket ID:", socket.id);
+        // Join the room when connected
+        socket.emit('join room', room);
+    });
+    
     // Handle incoming chat messages
-    socket.on('chat message', (data) => {
-      addMessage(data.user, data.message);
+    socket.on('chat', (data) => {
+        // Only show messages from our room
+        if (data.room === room) {
+            addMessage(data.user, data.message);
+        }
     });
 
     // Handle form submission
     document.getElementById('messageForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const input = document.getElementById('messageInput');
-      const message = input.value.trim();
-      if (message !== '') {
-        addMessage('User', message);
-        socket.emit('chat message', { user: 'User', message });
-        input.value = '';
-      }
+        e.preventDefault();
+        const input = document.getElementById('messageInput');
+        const message = input.value.trim();
+        if (message !== '' && room) {
+            addMessage('User', message);
+            socket.emit('chat message', { 
+                user: 'User', 
+                message,
+                room: room
+            });
+            input.value = '';
+        }
     });
 
     function addMessage(user, message) {
-      const messages = document.getElementById('messages');
-      const li = document.createElement('li');
-      li.textContent = `${user}: ${message}`;
-      messages.appendChild(li);
+        const messages = document.getElementById('messages');
+        const li = document.createElement('li');
+        if (user === 'AI') {
+            li.textContent = `${message}`;
+        } else {
+            li.textContent = `${message}`;
+        }
+        messages.appendChild(li);
     }
+
+  /*
+    let currentRoom = null;
+
+    function joinRoom() {
+        const roomInput = document.getElementById('room-input');
+        currentRoom = roomInput.value.trim();
+        if (currentRoom) {
+            socket.emit('join room', currentRoom);
+            document.getElementById('room-selection').style.display = 'none';
+            document.getElementById('chat').style.display = 'block';
+        }
+    }
+  */
   </script>
 </body>
 </html>
