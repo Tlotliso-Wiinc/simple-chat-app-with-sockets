@@ -1,10 +1,38 @@
-import express from 'express';
+import express, { response } from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
 import mongoose from 'mongoose';
 import { ChatOpenAI } from "@langchain/openai";
 import Message from './models/Message.js';
 import dotenv from 'dotenv';
+
+import {
+  START,
+  END,
+  MessagesAnnotation,
+  StateGraph,
+  MemorySaver,
+} from "@langchain/langgraph";
+
+import { v4 as uuidv4 } from "uuid";
+
+const config = { configurable: { thread_id: uuidv4() } };
+
+// Define the function that calls the model
+const callModel = async (state) => {
+  const response = await llm.invoke(state.messages);
+  return { messages: response };
+};
+
+// Define a new graph
+const workflow = new StateGraph(MessagesAnnotation)
+  .addNode("model", callModel)
+  .addEdge(START, "model")
+  .addEdge("model", END);
+
+// Add memory
+const memory = new MemorySaver();
+const graphApp = workflow.compile({ checkpointer: memory });
 
 // Load environment variables from .env file
 dotenv.config();
@@ -36,13 +64,19 @@ io.on('connection', (socket) => {
         console.log(data);
         
         // Call the LLM
-        const response = await llm.invoke([{ role: "user", content: data.message }]);
+        const output = await graphApp.invoke({ messages: [{ role: "user", content: data.message }] }, config);
+        // The output contains all messages in the state.
+        // This will log the last message in the conversation.
+        const lastMessage = output.messages[output.messages.length - 1];
+        console.log(lastMessage.content);
+
+        //const response = await llm.invoke([{ role: "user", content: data.message }]);
 
         // Broadcast the message only to the specific room
         if (data.room) {
             io.to(data.room).emit('chat', { 
                 user: "AI", 
-                message: response.content,
+                message: lastMessage.content,
                 room: data.room
             });
         }
