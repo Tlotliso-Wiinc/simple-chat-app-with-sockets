@@ -15,12 +15,22 @@ import {
 } from "@langchain/langgraph";
 
 import { v4 as uuidv4 } from "uuid";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+
+const promptTemplate = ChatPromptTemplate.fromMessages([
+  [
+    "system",
+    "You talk like a pirate. Answer all questions to the best of your ability.",
+  ],
+  ["placeholder", "{messages}"],
+]);
 
 const config = { configurable: { thread_id: uuidv4() } };
 
 // Define the function that calls the model
 const callModel = async (state) => {
-  const response = await llm.invoke(state.messages);
+  const prompt = await promptTemplate.invoke(state);
+  const response = await llm.invoke(prompt);
   return { messages: response };
 };
 
@@ -65,12 +75,11 @@ io.on('connection', (socket) => {
         
         // Call the LLM
         const output = await graphApp.invoke({ messages: [{ role: "user", content: data.message }] }, config);
+
         // The output contains all messages in the state.
         // This will log the last message in the conversation.
         const lastMessage = output.messages[output.messages.length - 1];
         console.log(lastMessage.content);
-
-        //const response = await llm.invoke([{ role: "user", content: data.message }]);
 
         // Broadcast the message only to the specific room
         if (data.room) {
