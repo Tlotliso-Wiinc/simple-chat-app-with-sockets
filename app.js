@@ -17,6 +17,7 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 const llm = new ChatOpenAI({
+  apiKey: dotenv.config().parsed.OPENAI_API_KEY,
   model: "gpt-4o-mini",
   temperature: 0
 });
