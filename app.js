@@ -41,7 +41,7 @@ const promptTemplate = ChatPromptTemplate.fromMessages([
 const config = { 
   configurable: { 
     thread_id: uuidv4(),
-    metadata: { language: "Spanish" }
+    metadata: { language: "English" }
   } 
 };
 
@@ -56,7 +56,7 @@ const callModel = async (state) => {
 
 const callModelWithTrimmedMessages = async (state) => {
   const trimmedMessage = await trimmer.invoke(state.messages);
-  const prompt = await promptTemplate2.invoke({
+  const prompt = await promptTemplate.invoke({
     messages: trimmedMessage,
     language: state.metadata?.language || "English",
   });
