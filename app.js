@@ -33,14 +33,6 @@ const trimmer = trimMessages({
 const promptTemplate = ChatPromptTemplate.fromMessages([
   [
     "system",
-    "You talk like a pirate. Answer all questions to the best of your ability.",
-  ],
-  new MessagesPlaceholder("messages"),
-]);
-
-const promptTemplate2 = ChatPromptTemplate.fromMessages([
-  [
-    "system",
     "You are a helpful assistant. Answer all questions to the best of your ability in {language}.",
   ],
   new MessagesPlaceholder("messages"),
@@ -64,20 +56,9 @@ const callModel = async (state) => {
 
 const callModelWithTrimmedMessages = async (state) => {
   const trimmedMessage = await trimmer.invoke(state.messages);
-  console.log(trimmedMessage);
   const prompt = await promptTemplate2.invoke({
     messages: trimmedMessage,
     language: state.metadata?.language || "English",
-  });
-  const response = await llm.invoke(prompt);
-  return { messages: [response] };
-};
-
-// Define the function that calls the model
-const callModel2 = async (state) => {
-  const prompt = await promptTemplate2.invoke({
-    messages: state.messages,
-    language: state.metadata?.language || "English"
   });
   const response = await llm.invoke(prompt);
   return { messages: [response] };
@@ -90,11 +71,6 @@ const workflow = new StateGraph(MessagesAnnotation)
   .addEdge("model", END);
 
 const workflow2 = new StateGraph(MessagesAnnotation)
-  .addNode("model", callModel2)
-  .addEdge(START, "model")
-  .addEdge("model", END);
-
-const workflow3 = new StateGraph(MessagesAnnotation)
   .addNode("model", callModelWithTrimmedMessages)
   .addEdge(START, "model")
   .addEdge("model", END);
@@ -103,7 +79,7 @@ const workflow3 = new StateGraph(MessagesAnnotation)
 const memory = new MemorySaver();
 const graphApp = workflow.compile({ checkpointer: memory });
 const graphApp2 = workflow2.compile({ checkpointer: new MemorySaver() });
-const graphApp3 = workflow3.compile({ checkpointer: new MemorySaver() });
+
 // Load environment variables from .env file
 dotenv.config();
 
@@ -135,7 +111,7 @@ io.on('connection', (socket) => {
         
         // Call the LLM
         // const output = await graphApp.invoke({ messages: [{ role: "user", content: data.message }] }, config);
-        const output = await graphApp3.invoke({ messages: [{ role: "user", content: data.message }]}, config);
+        const output = await graphApp2.invoke({ messages: [{ role: "user", content: data.message }]}, config);
 
         // The output contains all messages in the state.
         // This will log the last message in the conversation.
