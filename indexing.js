@@ -2,6 +2,7 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import dotenv from 'dotenv';
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
 
 // Load environment variables
 dotenv.config();
@@ -42,11 +43,8 @@ console.log(`Generated vectors of length ${vector1.length}\n`);
 console.log(vector1.slice(0, 10));
 
 
-
 // Create a vector store
-/*
 const vectorStore = new MemoryVectorStore(embeddings);
 
 // Add the documents to the vector store
 await vectorStore.addDocuments(allSplits);
-*/
