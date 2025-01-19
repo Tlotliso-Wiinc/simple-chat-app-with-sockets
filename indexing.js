@@ -30,16 +30,21 @@ const allSplits = await splitter.splitDocuments(docs);
 console.log(`Split blog post into ${allSplits.length} sub-documents.`);
 
 // Create embeddings
-/*
 const embeddings = new OpenAIEmbeddings({
     openAIApiKey: process.env.OPENAI_API_KEY
 });
-*/
 
-//console.log(embeddings);
+const vector1 = await embeddings.embedQuery(allSplits[0].pageContent);
+const vector2 = await embeddings.embedQuery(allSplits[1].pageContent);
 
-/*
+console.assert(vector1.length === vector2.length);
+console.log(`Generated vectors of length ${vector1.length}\n`);
+console.log(vector1.slice(0, 10));
+
+
+
 // Create a vector store
+/*
 const vectorStore = new MemoryVectorStore(embeddings);
 
 // Add the documents to the vector store
