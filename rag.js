@@ -93,6 +93,25 @@ const graph = new StateGraph(StateAnnotation)
 
 let inputs = { question: "What is Task Decomposition?" };
 
+/*
 const result = await graph.invoke(inputs);
 console.log(result.context.slice(0, 2));
 console.log(`\nAnswer: ${result["answer"]}`);
+*/
+
+/*
+console.log(inputs);
+console.log("\n====\n");
+for await (const chunk of await graph.stream(inputs, {
+  streamMode: "updates",
+})) {
+  console.log(chunk);
+  console.log("\n====\n");
+}
+*/
+
+const stream = await graph.stream(inputs, { streamMode: "messages" });
+
+for await (const [message, _metadata] of stream) {
+  process.stdout.write(message.content + "|");
+}
