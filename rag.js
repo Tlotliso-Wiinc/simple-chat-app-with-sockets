@@ -43,6 +43,22 @@ console.log(example_messages);
 console.assert(example_messages.length === 1);
 // console.log(example_messages[0].content);
 
+
+/* Custom Prompt Template */
+const template = `Use the following pieces of context to answer the question at the end.
+If you don't know the answer, just say that you don't know, don't try to make up an answer.
+Use three sentences maximum and keep the answer as concise as possible.
+Always say "thanks for asking!" at the end of the answer.
+
+{context}
+
+Question: {question}
+
+Helpful Answer:`;
+const promptTemplateCustom = ChatPromptTemplate.fromMessages([
+  ["user", template],
+]);
+
 const InputStateAnnotation = Annotation.Root({
   question: Annotation,
 });
@@ -75,7 +91,7 @@ const retrieve = async (state) => {
 
 const generate = async (state) => {
   const docsContent = state.context.map((doc) => doc.pageContent).join("\n");
-  const messages = await promptTemplate.invoke({
+  const messages = await promptTemplateCustom.invoke({
     question: state.question,
     context: docsContent,
   });
