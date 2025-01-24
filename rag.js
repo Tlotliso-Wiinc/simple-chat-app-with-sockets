@@ -9,6 +9,7 @@ import { Pinecone } from "@pinecone-database/pinecone";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { ChatOpenAI } from "@langchain/openai";
 import dotenv from 'dotenv';
+import { MessagesAnnotation } from "@langchain/langgraph";
 
 // Load environment variables
 dotenv.config();
@@ -38,7 +39,7 @@ const example_prompt = await promptTemplate.invoke({
 });
 
 const example_messages = example_prompt.messages;
-console.log(example_messages);
+//console.log(example_messages);
 
 console.assert(example_messages.length === 1);
 // console.log(example_messages[0].content);
@@ -106,6 +107,8 @@ const graph = new StateGraph(StateAnnotation)
   .addEdge("retrieve", "generate")
   .addEdge("generate", "__end__")
   .compile();
+
+const graph2 = new StateGraph(MessagesAnnotation);
 
 let inputs = { question: "What is Task Decomposition?" };
 
