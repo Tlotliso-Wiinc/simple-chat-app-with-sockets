@@ -136,13 +136,15 @@ const graph = graphBuilder.compile();
 
 let inputs1 = { messages: [{ role: "user", content: "Hello" }] };
 
+let inputs2 = { messages: [{ role: "user", content: "What is Task Decomposition?" }],};
+
 /*function prettyPrint(message) {
     console.log("Message Content:", message.content);
     console.log("Role:", message.role);
     // Add any other properties you want to print
 }*/
 
-for await (const step of await graph.stream(inputs1, {
+for await (const step of await graph.stream(inputs2, {
   streamMode: "values",
 })) {
   const lastMessage = step.messages[step.messages.length - 1];
