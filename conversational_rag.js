@@ -18,6 +18,13 @@ import {
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { toolsCondition } from "@langchain/langgraph/prebuilt";
 import { prettyPrint } from "./utils/pretty_print.js";
+import { MemorySaver } from "@langchain/langgraph";
+
+// Specify an ID for the thread
+const threadConfig = {
+  configurable: { thread_id: "abc123" },
+  streamMode: "values",
+};
 
 const llm = new ChatOpenAI({
     model: "gpt-4o-mini",
@@ -134,9 +141,16 @@ const graphBuilder = new StateGraph(MessagesAnnotation)
 
 const graph = graphBuilder.compile();
 
+const checkpointer = new MemorySaver();
+const graphWithMemory = graphBuilder.compile({ checkpointer });
+
 let inputs1 = { messages: [{ role: "user", content: "Hello" }] };
 
 let inputs2 = { messages: [{ role: "user", content: "What is Task Decomposition?" }],};
+
+let inputs3 = {
+  messages: [{ role: "user", content: "What is Task Decomposition?" }],
+};
 
 /*function prettyPrint(message) {
     console.log("Message Content:", message.content);
@@ -144,10 +158,16 @@ let inputs2 = { messages: [{ role: "user", content: "What is Task Decomposition?
     // Add any other properties you want to print
 }*/
 
-for await (const step of await graph.stream(inputs2, {
+/*for await (const step of await graphWithMemory.stream(inputs3, {
   streamMode: "values",
 })) {
   const lastMessage = step.messages[step.messages.length - 1];
   prettyPrint(lastMessage);
   console.log("-----\n");
-} 
+}*/
+
+for await (const step of await graphWithMemory.stream(inputs3, threadConfig)) {
+  const lastMessage = step.messages[step.messages.length - 1];
+  prettyPrint(lastMessage);
+  console.log("-----\n");
+}
