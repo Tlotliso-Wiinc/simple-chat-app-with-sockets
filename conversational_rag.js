@@ -19,6 +19,7 @@ import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { toolsCondition } from "@langchain/langgraph/prebuilt";
 import { prettyPrint } from "./utils/pretty_print.js";
 import { MemorySaver } from "@langchain/langgraph";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
 
 // Specify an ID for the thread
 const threadConfig = {
@@ -144,6 +145,8 @@ const graph = graphBuilder.compile();
 const checkpointer = new MemorySaver();
 const graphWithMemory = graphBuilder.compile({ checkpointer });
 
+const agent = createReactAgent({ llm: llm, tools: [retrieve] });
+
 let inputs1 = { messages: [{ role: "user", content: "Hello" }] };
 
 let inputs2 = { messages: [{ role: "user", content: "What is Task Decomposition?" }],};
@@ -166,7 +169,22 @@ let inputs3 = {
   console.log("-----\n");
 }*/
 
+/*
 for await (const step of await graphWithMemory.stream(inputs3, threadConfig)) {
+  const lastMessage = step.messages[step.messages.length - 1];
+  prettyPrint(lastMessage);
+  console.log("-----\n");
+}
+*/
+
+let inputMessage = `What is the standard method for Task Decomposition?
+Once you get the answer, look up common extensions of that method.`;
+
+let inputs5 = { messages: [{ role: "user", content: inputMessage }] };
+
+for await (const step of await agent.stream(inputs5, {
+  streamMode: "values",
+})) {
   const lastMessage = step.messages[step.messages.length - 1];
   prettyPrint(lastMessage);
   console.log("-----\n");
