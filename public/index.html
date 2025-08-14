@@ -16,6 +16,14 @@
 
   <div id="chat">
     <ul id="messages"></ul>
+    <div id="loading" class="loading-container" style="display: none;">
+      <div class="loading-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <p class="loading-text">AI is thinking...</p>
+    </div>
     <form id="messageForm">
       <input id="messageInput" autocomplete="off" />
       <button>Send</button>
@@ -39,6 +47,10 @@
         // Only show messages from our room
         if (data.room === room) {
             addMessage(data.user, data.message);
+            // Hide loading animation when AI responds
+            if (data.user === 'AI') {
+                hideLoading();
+            }
         }
     });
 
@@ -55,6 +67,8 @@
                 room: room
             });
             input.value = '';
+            // Show loading animation when sending message
+            showLoading();
         }
     });
 
@@ -67,6 +81,16 @@
             li.textContent = `${message}`;
         }
         messages.appendChild(li);
+    }
+
+    function showLoading() {
+        const loading = document.getElementById('loading');
+        loading.style.display = 'block';
+    }
+
+    function hideLoading() {
+        const loading = document.getElementById('loading');
+        loading.style.display = 'none';
     }
 
   /*
